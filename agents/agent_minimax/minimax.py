@@ -10,42 +10,6 @@ class Count(Enum):
     IS_NOT_COUNTABLE = 0
 
 
-def score_action(board: np.ndarray, player: BoardPiece):
-    """
-    Calculates the heuristic score of current board. Simple heuristic to evaluate board configurations Heuristic is
-    (num of 4-in-a-rows)*99999 + (num of 3-in-a-rows)*100 + (num of 2-in-a-rows)*10
-    - (num of opponent 4-in-a-rows)*99999 - (num of opponent 3-in-a-rows)*100 - (num of opponent 2-in-a-rows)*10
-    :param board:               np.ndarray
-                                Current board represented by array for game state
-    :param player:              BoardPiece
-                                Current player taking the turn
-    :return:                    int
-                                returns the heuristic score of current board
-    """
-
-    # Remark: cleaner/shorter is opp_player = PLAYER2 if player == PLAYER1 else PLAYER1
-    #  - Student comment : fixed it
-    # opp_player = PLAYER1
-    # if player == PLAYER1:
-    #     opp_player = PLAYER2
-    opp_player = PLAYER2 if player == PLAYER1 else PLAYER1
-
-    my_fours = check_for_score_for_no_of_filled_position(board, player, 4)
-    my_threes = check_for_score_for_no_of_filled_position(board, player, 3)
-    my_twos = check_for_score_for_no_of_filled_position(board, player, 2)
-    opp_fours = check_for_score_for_no_of_filled_position(board, opp_player, 4)
-    opp_threes = check_for_score_for_no_of_filled_position(board, opp_player, 3)
-    opp_twos = check_for_score_for_no_of_filled_position(board, opp_player, 2)
-    if opp_fours > 0:
-        return -100000
-    else:
-        # Remark: easier:
-        #         return 100000 (my_fours - opp_fours) + 100 (my_threes - opp_threes) + 10 (my_twos - opp_twos)
-        #         - Student comment : fixed it
-        # return my_fours*100000 + my_threes*100 + my_twos * 10 - opp_fours * 100000 - opp_threes * 100 - opp_twos * 10
-        return (my_fours - opp_fours) * 100000 + (my_threes - opp_threes) * 100 + (my_twos - opp_twos) * 10
-
-
 def check_for_score_for_no_of_filled_position(board: np.ndarray, player: BoardPiece, no_of_filled_position: int):
     """
     # Remark: explain briefly what the function is doing - Student comment : added
@@ -160,6 +124,42 @@ def negative_diagonal_check(row: int, col: int, board: np.ndarray, player: Board
     if is_eligible_for_diag_score:
         return Count.IS_COUNTABLE.value
     return Count.IS_NOT_COUNTABLE.value
+
+
+def score_action(board: np.ndarray, player: BoardPiece):
+    """
+    Calculates the heuristic score of current board. Simple heuristic to evaluate board configurations Heuristic is
+    (num of 4-in-a-rows)*99999 + (num of 3-in-a-rows)*100 + (num of 2-in-a-rows)*10
+    - (num of opponent 4-in-a-rows)*99999 - (num of opponent 3-in-a-rows)*100 - (num of opponent 2-in-a-rows)*10
+    :param board:               np.ndarray
+                                Current board represented by array for game state
+    :param player:              BoardPiece
+                                Current player taking the turn
+    :return:                    int
+                                returns the heuristic score of current board
+    """
+
+    # Remark: cleaner/shorter is opp_player = PLAYER2 if player == PLAYER1 else PLAYER1
+    #  - Student comment : fixed it
+    # opp_player = PLAYER1
+    # if player == PLAYER1:
+    #     opp_player = PLAYER2
+    opp_player = PLAYER2 if player == PLAYER1 else PLAYER1
+
+    my_fours = check_for_score_for_no_of_filled_position(board, player, 4)
+    my_threes = check_for_score_for_no_of_filled_position(board, player, 3)
+    my_twos = check_for_score_for_no_of_filled_position(board, player, 2)
+    opp_fours = check_for_score_for_no_of_filled_position(board, opp_player, 4)
+    opp_threes = check_for_score_for_no_of_filled_position(board, opp_player, 3)
+    opp_twos = check_for_score_for_no_of_filled_position(board, opp_player, 2)
+    if opp_fours > 0:
+        return -100000
+    else:
+        # Remark: easier:
+        #         return 100000 (my_fours - opp_fours) + 100 (my_threes - opp_threes) + 10 (my_twos - opp_twos)
+        #         - Student comment : fixed it
+        # return my_fours*100000 + my_threes*100 + my_twos * 10 - opp_fours * 100000 - opp_threes * 100 - opp_twos * 10
+        return (my_fours - opp_fours) * 100000 + (my_threes - opp_threes) * 100 + (my_twos - opp_twos) * 10
 
 
 def minimax_with_alpha_beta_pruning(board: np.ndarray, depth: int, alpha: float, beta: float, player: BoardPiece) -> (
