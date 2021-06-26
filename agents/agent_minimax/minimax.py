@@ -38,17 +38,15 @@ def check_for_score_for_no_of_filled_position(board: np.ndarray, player: BoardPi
                 #         first you check whether you have a number of noOfFilledPosition connected pieces from player,
                 #         but the next check should be on board[i, j + noOfFilledPosition : j + CONNECT_N]
                 #         However, I'm not sure if this will detect wins if noOfFilledPosition == CONNECT_N
-                #  - Student comment : fixed (the erroneous code is commented out and is to be removed after correction)
+                #  - Student comment : fixed
                 # horizontal connected noOfFilledPosition
                 if j <= cols_edge and np.all(board[i, j:j + no_of_filled_position] == player) \
                         and np.all(board[i, j + no_of_filled_position: j + CONNECT_N] == NO_PLAYER):
-                    # and np.all(board[i, j + noOfFilledPosition: CONNECT_N] == NO_PLAYER):
                     count += 1
 
                 # vertical connected noOfFilledPosition
                 if i <= rows_edge and np.all(board[i:i + no_of_filled_position, j] == player) \
                         and np.all(board[i + no_of_filled_position: i + CONNECT_N, j] == NO_PLAYER):
-                    # and np.all(board[i + noOfFilledPosition: CONNECT_N, j] == NO_PLAYER):
                     count += 1
 
                 # positively sloped diagonal connected noOfFilledPosition
@@ -141,9 +139,6 @@ def score_action(board: np.ndarray, player: BoardPiece):
 
     # Remark: cleaner/shorter is opp_player = PLAYER2 if player == PLAYER1 else PLAYER1
     #  - Student comment : fixed it
-    # opp_player = PLAYER1
-    # if player == PLAYER1:
-    #     opp_player = PLAYER2
     opp_player = PLAYER2 if player == PLAYER1 else PLAYER1
 
     my_fours = check_for_score_for_no_of_filled_position(board, player, 4)
@@ -158,7 +153,6 @@ def score_action(board: np.ndarray, player: BoardPiece):
         # Remark: easier:
         #         return 100000 (my_fours - opp_fours) + 100 (my_threes - opp_threes) + 10 (my_twos - opp_twos)
         #         - Student comment : fixed it
-        # return my_fours*100000 + my_threes*100 + my_twos * 10 - opp_fours * 100000 - opp_threes * 100 - opp_twos * 10
         return (my_fours - opp_fours) * 100000 + (my_threes - opp_threes) * 100 + (my_twos - opp_twos) * 10
 
 
@@ -185,10 +179,8 @@ def minimax_with_alpha_beta_pruning(board: np.ndarray, depth: int, alpha: float,
     if depth == 0 or len(valid_locations) == 0 or check_end_state(board, player) != GameState.STILL_PLAYING:
         return -1, score_action(board, player)
 
-
     # Remark: you should randomize among the moves with the highest score after evaluating
     #  - Student comment : fixed it by just shuffling and then taking the best_column
-    # best_column = np.random.choice(valid_locations)
     np.random.shuffle(valid_locations)
 
     if player == PLAYER1:
@@ -214,8 +206,7 @@ def minimax_with_alpha_beta_pruning(board: np.ndarray, depth: int, alpha: float,
                 min_score = new_score
                 best_column = col
             # Remark: you have to reset beta here (beta = min(beta, new_score))
-            #  - Student Comment : fixed it, erroneous code commented out and will be removed after checking
-            # alpha = min(alpha, new_score)
+            #  - Student Comment : fixed it
             beta = min(new_score, beta)
             if beta <= alpha:
                 break
