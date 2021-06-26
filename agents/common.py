@@ -77,8 +77,8 @@ def string_to_board(pp_board: str) -> np.ndarray:
     :rtype: board
     """
     game_rows_string = pp_board.splitlines()
-    game_rows_string_actual = game_rows_string[
-                              1: len(game_rows_string) - 2]  # ignoring the boundary styles of the board
+    # ignoring the boundary styles of the board
+    game_rows_string_actual = game_rows_string[1: len(game_rows_string) - 2]
     game_rows_string_actual_reversed = game_rows_string_actual[::-1]  # reversing the string board
     each_row_length = len(game_rows_string_actual_reversed[1]) - 2
     board = np.empty((0, int(each_row_length / 2)), np.int8)
@@ -86,8 +86,7 @@ def string_to_board(pp_board: str) -> np.ndarray:
         # removing the '|'s from start and end and taking only the player print characters
         game_row_actual = game_row[1:each_row_length:2]
         # replacing player print character with player numbers
-        game_row_actual = game_row_actual.replace(PLAYER1_PRINT, str(PLAYER1))\
-                            .replace(PLAYER2_PRINT, str(PLAYER2)).replace(' ', str(NO_PLAYER))
+        game_row_actual = game_row_actual.replace(PLAYER1_PRINT, str(PLAYER1)).replace(PLAYER2_PRINT, str(PLAYER2)).replace(' ', str(NO_PLAYER))
         # creating board only is board is undefined so as to generalize the size of the board
         board = np.vstack((board, list(map(np.int8, game_row_actual))))
     return board
