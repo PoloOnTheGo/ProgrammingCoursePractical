@@ -63,7 +63,8 @@ def pretty_print_board(board: np.ndarray) -> str:
                                np.where(str_board_array == PLAYER2, PLAYER2_PRINT, NO_PLAYER_PRINT))
 
     for i in range(1, str_board_array.shape[0] + 1):
-        board_str += '|' + str(' '.join(str_board_array[-i, :])) + ' |' + '\n'  # reversing and joining the space and the pipes
+        # reversing and joining the space and the pipes
+        board_str += '|' + str(' '.join(str_board_array[-i, :])) + ' |' + '\n'
 
     return board_str + end_two_lines
 
@@ -76,7 +77,8 @@ def string_to_board(pp_board: str) -> np.ndarray:
     :rtype: board
     """
     game_rows_string = pp_board.splitlines()
-    game_rows_string_actual = game_rows_string[1: len(game_rows_string) - 2]  # ignoring the boundary styles of the board
+    game_rows_string_actual = game_rows_string[
+                              1: len(game_rows_string) - 2]  # ignoring the boundary styles of the board
     game_rows_string_actual_reversed = game_rows_string_actual[::-1]  # reversing the string board
     each_row_length = len(game_rows_string_actual_reversed[1]) - 2
     board = np.empty((0, int(each_row_length / 2)), np.int8)
@@ -84,7 +86,8 @@ def string_to_board(pp_board: str) -> np.ndarray:
         # removing the '|'s from start and end and taking only the player print characters
         game_row_actual = game_row[1:each_row_length:2]
         # replacing player print character with player numbers
-        game_row_actual = game_row_actual.replace(PLAYER1_PRINT, str(PLAYER1)).replace(PLAYER2_PRINT, str(PLAYER2)).replace(' ', str(NO_PLAYER))
+        game_row_actual = game_row_actual.replace(PLAYER1_PRINT, str(PLAYER1))\
+                            .replace(PLAYER2_PRINT, str(PLAYER2)).replace(' ', str(NO_PLAYER))
         # creating board only is board is undefined so as to generalize the size of the board
         board = np.vstack((board, list(map(np.int8, game_row_actual))))
     return board
@@ -119,30 +122,43 @@ def connected_four(
     rows_edge = rows - CONNECT_N
     cols_edge = cols - CONNECT_N
     if last_action is not None:
-        start_idx = max(0, last_action - 4)
-        end_idx = min(last_action + 4, cols)
-        small_board = board[:, start_idx:end_idx]
+        start_action_idx = max(0, last_action - 4)
+        end_action_idx = min(last_action + 4, cols)
+        small_board = board[:, start_action_idx:end_action_idx]
+        # Remark: you could do the same for rows
+        #  - Student comment: added row filter
+        last_row_action = np.max(np.argwhere(small_board[:, last_action] != NO_PLAYER))
+        start_action_idx = last_row_action - 4
+        if start_action_idx > 0:
+            small_board = small_board[start_action_idx:last_row_action, :]
         return connected_four(small_board, player)
     else:
         for i in range(rows):
             for j in range(cols):
                 # horizontal connected 4
-                if j <= cols_edge and np.all(board[i, j:j + CONNECT_N] == player):
+                if j <= cols_edge and np.all(board[i, j:(j + CONNECT_N)] == player):
                     return True
                 # vertical connected 4
-                if i <= rows_edge and np.all(board[i:i + CONNECT_N, j] == player):
+                if i <= rows_edge and np.all(board[i:(i + CONNECT_N), j] == player):
                     return True
                 # positively sloped diagonal connected 4
-                if i <= rows_edge and j <= cols_edge and board[i][j] == player and board[i + 1][j + 1] == player \
-                        and board[i + 2][j + 2] == player \
-                        and board[i + 3][j + 3] == player:
+                # Remark: diagonals could be expressed more concisely
+                #  - Student comment: tried to concise it for both positively and negatively sloped diagonal,
+                #                     by using np.diag(block) but it is somehow not working and taking diagonal of
+                #                     length 3 sometimes also, I tried to debug it through, but failed
+                if i <= rows_edge and j <= cols_edge \
+                        and board[i][j] == player and board[i + 1][j + 1] == player \
+                        and board[i + 2][j + 2] == player and board[i + 3][j + 3] == player:
+                    # block = board[i:i + CONNECT_N, j:j + CONNECT_N]
+                    # if np.all(np.diag(block) == player):
                     return True
                 # negatively sloped diagonal connected 4
-                if i >= CONNECT_N-1 and j <= cols_edge and board[i][j] == player and board[i - 1][j + 1] == player \
-                        and board[i - 2][j + 2] == player \
-                        and board[i - 3][j + 3] == player:
+                if i >= CONNECT_N - 1 and j <= cols_edge \
+                        and board[i][j] == player and board[i - 1][j + 1] == player \
+                        and board[i - 2][j + 2] == player and board[i - 3][j + 3] == player:
+                    # block = board[i:i + CONNECT_N, j:j + CONNECT_N]
+                    # if np.all(np.diag(block[::-1, :]) == player):
                     return True
-
         return False
 
 
@@ -154,10 +170,10 @@ def check_end_state(
     action won (GameState.IS_WIN) or drawn (GameState.IS_DRAW) the game,
     or is play still on-going (GameState.STILL_PLAYING)?
     """
-    if not (board == NO_PLAYER).any():
-        return GameState.IS_DRAW
     if connected_four(board, player, last_action):
         return GameState.IS_WIN
+    if not (board == NO_PLAYER).any():
+        return GameState.IS_DRAW
     return GameState.STILL_PLAYING
 
 
@@ -165,7 +181,7 @@ def is_action_valid(board: np.ndarray, action: PlayerAction):
     """
     Returns True if the current action is a valid action
     """
-    return board[len(board)-1, action] == NO_PLAYER
+    return board[len(board) - 1, action] == NO_PLAYER
 
 
 def get_valid_actions(board: np.ndarray):

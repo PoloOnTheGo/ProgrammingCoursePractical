@@ -1,5 +1,5 @@
 import numpy as np
-from agents.common import BoardPiece, NO_PLAYER, PLAYER1, PLAYER2
+from agents.common import BoardPiece, NO_PLAYER, PLAYER1, PLAYER2, GameState
 from agents.common import initialize_game_state
 import timeit
 
@@ -36,7 +36,7 @@ def test_pretty_print_board():
 
 def test_string_to_board():
     from agents.common import string_to_board
-    board_str = """|==============| 
+    board_str = """|==============|
 |              |
 |              |
 |              |
@@ -76,6 +76,8 @@ def test_apply_player_action():
     ret = apply_player_action(int_board.copy(), 0, PLAYER1, True)
     assert (ret.dtype == BoardPiece)
     assert ((int_board != ret).any())
+    # Remark: you should check that the board is modified at the exact square where it should
+    #  - Student Comment : Can not understand, how to check this
 
 
 def test_connected_four():
@@ -145,4 +147,46 @@ def test_connected_four():
 
 
 def test_check_end_state():
-    pass
+    from agents.common import string_to_board
+    from agents.common import check_end_state
+    board_str = """|==============| 
+|O O X         |
+|X O X O X O O |
+|O X O X O X X |
+|O X O X X O O |
+|O X O O X O O |
+|X O X O X X X |
+|==============|
+|0 1 2 3 4 5 6 |"""
+
+    board = string_to_board(board_str)
+    end_state = check_end_state(board, PLAYER2)
+    assert (end_state == GameState.IS_WIN)
+
+    board_str = """|==============| 
+|O O X         |
+|X O X X X O O |
+|O X O X O X X |
+|O X O X X O O |
+|O X O O X O O |
+|X O X O X X X |
+|==============|
+|0 1 2 3 4 5 6 |"""
+
+    board = string_to_board(board_str)
+    end_state = check_end_state(board, PLAYER2)
+    assert (end_state == GameState.STILL_PLAYING)
+
+    board_str = """|==============| 
+|O O X O O O X |
+|X O X X X O O |
+|O X O X O X X |
+|O X O X X O O |
+|O X O O X O O |
+|X O X O X X X |
+|==============|
+|0 1 2 3 4 5 6 |"""
+
+    board = string_to_board(board_str)
+    end_state = check_end_state(board, PLAYER2)
+    assert (end_state == GameState.IS_DRAW)
