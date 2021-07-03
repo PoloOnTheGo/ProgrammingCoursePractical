@@ -15,6 +15,7 @@ def test_generate_minimax_move():
     test_board = np.full((6, 7), NO_PLAYER)
     action, _ = generate_move(test_board, PLAYER1, None)
     assert action != -1
+    # test the action should be in b/w 0 and 6
 
     # negative test - invalid situations
     test_board = np.full((6, 7), PLAYER2)

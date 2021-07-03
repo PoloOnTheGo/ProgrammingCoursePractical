@@ -124,8 +124,6 @@ def connected_four(
         start_action_idx = max(0, last_action - 4)
         end_action_idx = min(last_action + 4, cols)
         small_board = board[:, start_action_idx:end_action_idx]
-        # Remark: you could do the same for rows
-        #  - Student comment: added row filter
         last_row_action = np.max(np.argwhere(small_board[:, last_action] != NO_PLAYER))
         start_action_idx = last_row_action - 4
         if start_action_idx > 0:
@@ -141,23 +139,14 @@ def connected_four(
                 if i <= rows_edge and np.all(board[i:(i + CONNECT_N), j] == player):
                     return True
                 # positively sloped diagonal connected 4
-                # Remark: diagonals could be expressed more concisely
-                #  - Student comment: tried to concise it for both positively and negatively sloped diagonal,
-                #                     by using np.diag(block) but it is somehow not working and taking diagonal of
-                #                     length 3 sometimes also, I tried to debug it through, but failed
-                if i <= rows_edge and j <= cols_edge \
-                        and board[i][j] == player and board[i + 1][j + 1] == player \
-                        and board[i + 2][j + 2] == player and board[i + 3][j + 3] == player:
-                    # block = board[i:i + CONNECT_N, j:j + CONNECT_N]
-                    # if np.all(np.diag(block) == player):
-                    return True
-                # negatively sloped diagonal connected 4
-                if i >= CONNECT_N - 1 and j <= cols_edge \
-                        and board[i][j] == player and board[i - 1][j + 1] == player \
-                        and board[i - 2][j + 2] == player and board[i - 3][j + 3] == player:
-                    # block = board[i:i + CONNECT_N, j:j + CONNECT_N]
-                    # if np.all(np.diag(block[::-1, :]) == player):
-                    return True
+                if i <= rows_edge and j <= cols_edge :
+                    block = board[i:i + CONNECT_N, j:j + CONNECT_N]
+                    if np.all(np.diag(block) == player):
+                        return True
+                    # negatively sloped diagonal connected 4
+                    block = np.fliplr(block)
+                    if np.all(np.diag(block) == player):
+                        return True
         return False
 
 
