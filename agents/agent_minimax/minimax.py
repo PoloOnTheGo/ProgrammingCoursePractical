@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Optional, Tuple
 from agents.common import BoardPiece, SavedState, PlayerAction, get_valid_actions, check_end_state, \
-    GameState, PLAYER1, PLAYER2, NO_PLAYER, apply_player_action, CONNECT_N
+    GameState, PLAYER1, PLAYER2, NO_PLAYER, apply_player_action, CONNECT_N, get_next_player
 import numpy as np
 
 
@@ -139,7 +139,7 @@ def score_action(board: np.ndarray, player: BoardPiece):
 
     # Remark: cleaner/shorter is opp_player = PLAYER2 if player == PLAYER1 else PLAYER1
     #  - Student comment : fixed it
-    opp_player = PLAYER2 if player == PLAYER1 else PLAYER1
+    opp_player = get_next_player(player)
 
     my_fours = check_for_score_for_no_of_filled_position(board, player, 4)
     my_threes = check_for_score_for_no_of_filled_position(board, player, 3)
