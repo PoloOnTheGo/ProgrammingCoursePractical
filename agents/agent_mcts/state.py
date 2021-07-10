@@ -1,60 +1,36 @@
 import copy
+import math
 
 import numpy as np
 
 from agents.common import BoardPiece, PlayerAction, check_end_state, get_valid_actions, apply_player_action, \
-    get_next_player, GameState
+    get_opponent, GameState, NO_PLAYER, PLAYER1, PLAYER2
 
 
 class State(object):
     def __init__(self, board: np.ndarray, player: BoardPiece = None, value: float = 0.0, visits: int = 0,
                  action: PlayerAction = 0, parent=None):
         self.board = board.copy()
-        self.children = []
+        self.children = {}
         self.value = value
         self.visits = visits
         self.player = player
         self.action = action
         self.parent = parent
-
-    def get_board(self) -> np.ndarray:
-        return self.board
-
-    def get_children(self) -> []:
-        return self.children
-
-    def get_value(self) -> float:
-        return self.value
-
-    def get_visits(self) -> int:
-        return self.visits
-
-    def get_player(self) -> BoardPiece:
-        return self.player
-
-    def get_action(self) -> PlayerAction:
-        return self.action
-
-    def get_parent(self):
-        return self.parent
-
-    def set_visits(self, visits: int) -> None:
-        self.visits = visits
-
-    def set_value(self, value: float) -> None:
-        self.value = value
+        self.is_terminal = not(check_end_state(self.board, PLAYER1) == GameState.STILL_PLAYING) \
+                           or not(check_end_state(self.board, PLAYER2) == GameState.STILL_PLAYING)
+        # self.is_fully_expanded = self.is_terminal
 
     def add_child(self, child):
         self.children.append(copy.deepcopy(child))
 
     def update_state(self, value: float) -> None:
-        self.visits = self.visits + 1
-        self.value = self.value + value
+        self.visits += 1
+        self.value += value
 
     def is_leaf_node(self) -> bool:
-        board = self.get_board()
-        valid_actions = get_valid_actions(board)
-        return len(self.children) != len(valid_actions)
+        valid_actions = get_valid_actions(self.board)
+        return len(self.children.values()) != len(valid_actions)
 
     def simulate(self, init_state):
         board = self.get_board()
@@ -68,7 +44,7 @@ class State(object):
             selected_action = np.random.choice(valid_actions)
             board = apply_player_action(board, selected_action, player, True)
             if (state_status := check_end_state(board, player)) == GameState.STILL_PLAYING:
-                player = get_next_player(player)
+                player = get_opponent(player)
             else:
                 break
 
@@ -119,7 +95,7 @@ class State(object):
         self.remove_action_already_present_as_child(valid_actions)
         action = np.random.choice(valid_actions)
 
-        player = get_next_player(self.get_player())
+        player = get_opponent(self.get_player())
         child_board = apply_player_action(board, action, player, True)
         child = State(child_board, player, parent=self, action=action)
         self.add_child(child)
@@ -128,3 +104,23 @@ class State(object):
     def remove_action_already_present_as_child(self, valid_actions: []):
         for child in self.children:
             valid_actions.remove(child.get_action())
+
+    def get_best_move(self, exploration_constant):
+        # define best score & best moves
+        best_score = float('-inf')
+        best_child = None
+
+        # loop over child nodes
+        for child_node in self.children.values():
+            w_i = child_node.value
+            s_i = child_node.visits
+            s_p = self.visits
+            if s_i == 0:
+                best_child = child_node
+            else:
+                move_score = w_i / s_i + exploration_constant * math.sqrt(math.log(s_p) / s_i)
+                if move_score > best_score:
+                    best_score = move_score
+                    best_child = child_node
+
+        return best_child

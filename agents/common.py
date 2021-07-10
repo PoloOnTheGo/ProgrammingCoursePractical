@@ -183,7 +183,7 @@ def get_valid_actions(board: np.ndarray):
     return valid_actions
 
 
-def get_next_player(current_player: BoardPiece) -> BoardPiece:
+def get_opponent(current_player: BoardPiece) -> BoardPiece:
     return PLAYER2 if current_player == PLAYER1 else PLAYER1
 
 
