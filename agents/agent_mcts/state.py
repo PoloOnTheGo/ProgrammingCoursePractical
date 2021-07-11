@@ -1,11 +1,7 @@
-import copy
 import math
-import time
-
 import numpy as np
 
-from agents.common import BoardPiece, PlayerAction, check_end_state, get_valid_actions, apply_player_action, \
-    get_opponent, GameState, NO_PLAYER, PLAYER1, PLAYER2
+from agents.common import BoardPiece, PlayerAction, check_end_state, get_valid_actions, GameState, PLAYER1, PLAYER2
 
 
 class State(object):
@@ -20,7 +16,9 @@ class State(object):
         self.parent = parent
         self.is_terminal = not(check_end_state(self.board, PLAYER1) == GameState.STILL_PLAYING) \
                            or not(check_end_state(self.board, PLAYER2) == GameState.STILL_PLAYING)
-        # self.is_fully_expanded = self.is_terminal
+
+    def add_child(self, child):
+        self.children[child.action] = child
 
     def update_state(self, value: float) -> None:
         self.visits += 1
