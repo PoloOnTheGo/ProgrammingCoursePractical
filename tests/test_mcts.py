@@ -1,7 +1,7 @@
 import numpy as np
 
 from agents.agent_mcts import generate_move, State
-from agents.agent_mcts.mcts import tree_traversal, select_leaf_node, expand, rollout, backpropagate
+from agents.agent_mcts.mcts import tree_traversal
 from agents.common import string_to_board, PLAYER1, PLAYER1_PRINT, PLAYER2_PRINT, PlayerAction, PLAYER2
 
 
@@ -99,8 +99,8 @@ def test_tree_traversal():
     # -------------------------------------------------------------------------
 
     print("\n Case 3: Analysis of immediate win(vertical win) for opponent: ---------------------")
-    board_str = "|==============|\n|              |\n|              |\n|              |\n|              |" \
-                "\n|    X X       |\n|    X O O O   |\n|==============|\n|0 1 2 3 4 5 6 |"
+    board_str = "|==============|\n|              |\n|              |\n|X             |\n|O         O   |" \
+                "\n|O X   X   O   |\n|O X O X X O X |\n|==============|\n|0 1 2 3 4 5 6 |"
     board = string_to_board(board_str)
     init_state = State(board.copy(), player=player)
     print(board_str)
@@ -128,7 +128,7 @@ def test_select_leaf_node():
 
     init_state.add_child(child_1)
     init_state.add_child(child_2)
-    leaf_node = select_leaf_node(init_state)
+    leaf_node = init_state.select_leaf_node()
     assert(leaf_node == init_state)
 
     # Case 2: Child is leaf node: ---------------------"
@@ -173,7 +173,7 @@ def test_select_leaf_node():
     init_state.add_child(child_5)
     init_state.add_child(child_6)
     init_state.add_child(child_7)
-    leaf_node = select_leaf_node(init_state)
+    leaf_node = init_state.select_leaf_node()
     assert (leaf_node == child_7)
 
 
@@ -183,7 +183,7 @@ def test_expand():
                 "\n|    O X X O   |\n|X O X O O X   |\n|==============|\n|0 1 2 3 4 5 6 |"""
     board = string_to_board(board_str)
     init_state = State(board.copy(), player=player, visits=1)
-    child = expand(init_state)
+    child = init_state.expand()
 
     assert(len(init_state.children) == 1)
 
@@ -207,7 +207,7 @@ def test_rollout():
     current_node_board = string_to_board(board_str)
     current_node = State(current_node_board, player=PLAYER2, action=PlayerAction(5))
 
-    v = rollout(current_node, init_state, player)
+    v = current_node.rollout(init_state, player)
     assert(v == 1)
 
     # Immediate loss -----------------------------
@@ -222,7 +222,7 @@ def test_rollout():
     current_node_board = string_to_board(board_str)
     current_node = State(current_node_board, player=PLAYER2, action=PlayerAction(5))
 
-    v = rollout(current_node, init_state, player)
+    v = current_node.rollout(init_state, player)
     assert (v == 0)
 
 
@@ -244,7 +244,7 @@ def test_back_propagate():
     init_state.add_child(child_1)
     init_state.add_child(child_2)
 
-    backpropagate(child_1, 1)
+    child_1.backpropagate(1)
     assert(child_1.value == 1.0)
     assert(child_1.visits == 1)
     assert(child_2.visits == 0)
