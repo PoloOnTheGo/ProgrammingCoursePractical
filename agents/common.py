@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Optional
 import numpy as np
 from typing import Callable, Tuple
+from scipy.signal.sigtools import _convolve2d
 
 BoardPiece = np.int8  # The data type (dtype) of the board
 NO_PLAYER = BoardPiece(0)  # board[i, j] == NO_PLAYER where the position is empty
@@ -107,47 +108,47 @@ def apply_player_action(
     return updated_board
 
 
-def connected_four(
-        board: np.ndarray, player: BoardPiece, last_action: Optional[PlayerAction] = None,
-) -> bool:
-    """
-    Returns True if there are four adjacent pieces equal to `player` arranged
-    in either a horizontal, vertical, or diagonal line. Returns False otherwise.
-    If desired, the last action taken (i.e. last column played) can be provided
-    for potential speed optimisation.
-    """
-
-    rows, cols = board.shape
-    rows_edge = rows - CONNECT_N
-    cols_edge = cols - CONNECT_N
-    if last_action is not None:
-        start_action_idx = max(0, last_action - 4)
-        end_action_idx = min(last_action + 4, cols)
-        small_board = board[:, start_action_idx:end_action_idx]
-        last_row_action = np.max(np.argwhere(small_board[:, last_action] != NO_PLAYER))
-        start_action_idx = last_row_action - 4
-        if start_action_idx > 0:
-            small_board = small_board[start_action_idx:last_row_action, :]
-        return connected_four(small_board, player)
-    else:
-        for i in range(rows):
-            for j in range(cols):
-                # horizontal connected 4
-                if j <= cols_edge and np.all(board[i, j:(j + CONNECT_N)] == player):
-                    return True
-                # vertical connected 4
-                if i <= rows_edge and np.all(board[i:(i + CONNECT_N), j] == player):
-                    return True
-                # positively sloped diagonal connected 4
-                if i <= rows_edge and j <= cols_edge :
-                    block = board[i:i + CONNECT_N, j:j + CONNECT_N]
-                    if np.all(np.diag(block) == player):
-                        return True
-                    # negatively sloped diagonal connected 4
-                    block = np.fliplr(block)
-                    if np.all(np.diag(block) == player):
-                        return True
-        return False
+# def connected_four_iter(
+#         board: np.ndarray, player: BoardPiece, last_action: Optional[PlayerAction] = None,
+# ) -> bool:
+#     """
+#     Returns True if there are four adjacent pieces equal to `player` arranged
+#     in either a horizontal, vertical, or diagonal line. Returns False otherwise.
+#     If desired, the last action taken (i.e. last column played) can be provided
+#     for potential speed optimisation.
+#     """
+#
+#     rows, cols = board.shape
+#     rows_edge = rows - CONNECT_N
+#     cols_edge = cols - CONNECT_N
+#     if last_action is not None:
+#         start_action_idx = max(0, last_action - 4)
+#         end_action_idx = min(last_action + 4, cols)
+#         small_board = board[:, start_action_idx:end_action_idx]
+#         last_row_action = np.max(np.argwhere(small_board[:, last_action] != NO_PLAYER))
+#         start_action_idx = last_row_action - 4
+#         if start_action_idx > 0:
+#             small_board = small_board[start_action_idx:last_row_action, :]
+#         return connected_four(small_board, player)
+#     else:
+#         for i in range(rows):
+#             for j in range(cols):
+#                 # horizontal connected 4
+#                 if j <= cols_edge and np.all(board[i, j:(j + CONNECT_N)] == player):
+#                     return True
+#                 # vertical connected 4
+#                 if i <= rows_edge and np.all(board[i:(i + CONNECT_N), j] == player):
+#                     return True
+#                 # positively sloped diagonal connected 4
+#                 if i <= rows_edge and j <= cols_edge :
+#                     block = board[i:i + CONNECT_N, j:j + CONNECT_N]
+#                     if np.all(np.diag(block) == player):
+#                         return True
+#                     # negatively sloped diagonal connected 4
+#                     block = np.fliplr(block)
+#                     if np.all(np.diag(block) == player):
+#                         return True
+#         return False
 
 
 def check_end_state(
@@ -176,11 +177,7 @@ def get_valid_actions(board: np.ndarray):
     """
     Returns all the valid next actions
     """
-    valid_actions = []
-    for action in range(len(board[0])):
-        if is_action_valid(board, action):
-            valid_actions.append(action)
-    return valid_actions
+    return np.where(board[-1] == NO_PLAYER)[0]
 
 
 def get_opponent(current_player: BoardPiece) -> BoardPiece:
@@ -190,6 +187,28 @@ def get_opponent(current_player: BoardPiece) -> BoardPiece:
 class SavedState:
     def __init__(self, computational_result):
         self.computational_result = computational_result
+
+
+col_kernel = np.ones((CONNECT_N, 1), dtype=BoardPiece)
+row_kernel = np.ones((1, CONNECT_N), dtype=BoardPiece)
+dia_l_kernel = np.diag(np.ones(CONNECT_N, dtype=BoardPiece))
+dia_r_kernel = np.array(np.diag(np.ones(CONNECT_N, dtype=BoardPiece))[::-1, :])
+
+
+def connected_four(
+    board: np.ndarray, player: BoardPiece, _last_action: Optional[PlayerAction] = None
+) -> bool:
+    board = board.copy()
+
+    other_player = BoardPiece(player % 2 + 1)
+    board[board == other_player] = NO_PLAYER
+    board[board == player] = BoardPiece(1)
+
+    for kernel in (col_kernel, row_kernel, dia_l_kernel, dia_r_kernel):
+        result = _convolve2d(board, kernel, 1, 0, 0, BoardPiece(0))
+        if np.any(result == CONNECT_N):
+            return True
+    return False
 
 
 GenMove = Callable[

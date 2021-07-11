@@ -10,7 +10,7 @@ def test_generate_mcts_move():
     """
     from agents.agent_mcts import generate_move
     from agents.common import NO_PLAYER, PLAYER1, PLAYER2, BoardPiece
-
+    print("\n 1st Test : ---------------------")
     # positive test - winning move
     from agents.common import string_to_board
     board_str = """|==============| 
@@ -22,11 +22,12 @@ def test_generate_mcts_move():
 |X O X O O X   |
 |==============|
 |0 1 2 3 4 5 6 |"""
-
+    print(board_str)
     board = string_to_board(board_str)
     action, _ = generate_move(board, PLAYER1, None)
     assert (action == 5)
 
+    print("\n 2nd Test : ---------------------")
 
     board_str = """|==============| 
 |              |
@@ -38,6 +39,24 @@ def test_generate_mcts_move():
 |==============|
 |0 1 2 3 4 5 6 |"""
 
+    print(board_str)
+    board = string_to_board(board_str)
+    action, _ = generate_move(board, PLAYER1, None)
+    assert (action == 4)
+
+    print("\n 3rd Test : ---------------------")
+
+    board_str = """|==============|
+|              |
+|              |
+|              |
+|              |
+|    X X       |
+|    X O O O   |
+|==============|
+|0 1 2 3 4 5 6 |"""
+
+    print(board_str)
     board = string_to_board(board_str)
     action, _ = generate_move(board, PLAYER1, None)
     assert (action == 4)

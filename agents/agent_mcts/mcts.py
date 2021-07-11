@@ -1,3 +1,4 @@
+import time
 from copy import copy
 from typing import Optional, Tuple
 
@@ -11,7 +12,7 @@ from agents.common import BoardPiece, SavedState, PlayerAction, get_valid_action
 def generate_move_mcts(board: np.ndarray, player: BoardPiece, saved_state: Optional[SavedState]) -> Tuple[
         PlayerAction, Optional[SavedState]]:
     # Choose a valid, non-full column and return it as `action`
-    no_of_iterations = 1000
+    no_of_iterations = 2000
     action = mcts(board, no_of_iterations, player)
     return action, saved_state
 
@@ -19,14 +20,17 @@ def generate_move_mcts(board: np.ndarray, player: BoardPiece, saved_state: Optio
 def mcts(board: np.ndarray, no_of_iterations: int, player: BoardPiece) -> PlayerAction:
     init_state = State(board.copy(), player=player)
     tree_traversal(no_of_iterations, init_state, player)
+    for child in init_state.children.values():
+        print("Action: " + str(child.action) + ", Wins:" + str(child.value) + " , Visits:", str(child.visits)
+              + ", Value:" + (str(child.value/child.visits)))
     chosen_child: State = init_state.get_best_move(0)
     return chosen_child.action
 
 
 def tree_traversal(no_of_iterations:int, initial_node: State, player: BoardPiece):
     for _ in range(no_of_iterations):
-        # current_node = initial_node
         current_node = select_leaf_node(initial_node)
+
         if current_node.visits != 0:
             current_node = expand(current_node)
         v = rollout(current_node, initial_node, player)
@@ -53,6 +57,7 @@ def rollout(rolledout_node: State, init_node: State, init_player: BoardPiece):
     if rolledout_node == init_node:
         return value
     current_node = copy(rolledout_node)
+
     while True:
         board = current_node.board
         current_player = current_node.player
@@ -80,7 +85,7 @@ def expand(node):
     board = node.board
     valid_actions = get_valid_actions(board)
     # no_of_possible_children = len(valid_actions)
-    remove_action_already_present_as_child(node, valid_actions)
+    valid_actions = remove_action_already_present_as_child(node, valid_actions)
 
     action = np.random.choice(valid_actions)
     player = node.player
@@ -95,9 +100,7 @@ def expand(node):
 
 
 def remove_action_already_present_as_child(node, valid_actions):
-    for child in node.children.values():
-        if child.action not in valid_actions:
-            continue
-        valid_actions.remove(child.action)
+    children_actions = [*node.children]
+    return np.setdiff1d(valid_actions, children_actions)
 
 
